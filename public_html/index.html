@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html class="loading">
     <head>
         <meta charset="utf-8"/>
-        <title>D Webassembly Test</title>
+        <title>D Webassembly Dither Example</title>
         <meta name="description" content=""/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <link rel="stylesheet" type="text/css" href="styles/style.css"/>
-        <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     </head>
     <body>
-		<label>Open image file<input type="file"/></label>
-		<div class="hint"></div>
+        <div class="container">
+            <div class="loading-message">Loading&hellip;</div>
+            <main class="main">
+                <label for="image-file-input">Open image file</label>
+                <input id="image-file-input" type="file"/>
+                <p class="hint">Your photos will remain on your device and will not be uploaded or shared with anyone.</p>
+                <div>
+                    <canvas id="display-canvas"></canvas>
+                </div>
+            </main>
+        </div>
 		<script src="/js/app.js"></script>
     </body>
 </html>
