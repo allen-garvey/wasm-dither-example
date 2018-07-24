@@ -28,9 +28,25 @@ int min(int v1, int v2, int v3){
 }
 
 float pixelLightness(int r, int g, int b){
-	immutable float maxValue = max(r, g, b) / 255.0;
-	immutable float minValue = min(r, g, b) / 255.0;
-	return (maxValue + minValue) / 2.0;
+	immutable int maxValue = max(r, g, b);
+	immutable int minValue = min(r, g, b);
+	//510 = 255 * 2
+	return (maxValue + minValue) / 510.0;
+}
+
+//static array on the stack is not working, so have to do this
+float getBayerValue(int x, int y, int dimensions){
+	immutable int index = (y%dimensions) * dimensions + (x%dimensions);
+	switch(index){
+		case 0:
+			return -0.5;
+		case 1:
+			return 0.166666667;
+		case 2:
+			return 0.5;
+		default:
+			return -0.166666667;
+	}
 }
 
 void dither(int imageWidth, int imageHeight){
@@ -45,7 +61,7 @@ void dither(int imageWidth, int imageHeight){
     immutable float ditherRCoefficient = 0.7937005259840997;
     //2x2 bayer matrix
     immutable int bayerDimensions = 2;
-    float[4] bayerMatrix = [0.0, 0.666666667, 1.0, 0.33333333];
+    //float[4] bayerMatrix = [-0.5, 0.166666667, 0.5, -.166666667];
     //threshold where we switch between black and white
     immutable float threshold = 0.5;
 
@@ -53,12 +69,13 @@ void dither(int imageWidth, int imageHeight){
     	//ignore transparent pixels
     	if(pixels[pixelOffset+3] > 0){
     		//have to disable array bounds check in compiler for dynamic array index
-    		float bayerValue = bayerMatrix[y%bayerDimensions * bayerDimensions + (x%bayerDimensions)];
+    		//float bayerValue = bayerMatrix[(y%bayerDimensions) * bayerDimensions + (x%bayerDimensions)];
+    		float bayerValue = getBayerValue(x, y, bayerDimensions);
     		float currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
     		
     		//dither between black and white
     		ubyte outputColor = 0;
-    		if(currentLightness + ditherRCoefficient * bayerValue >= threshold){
+    		if((currentLightness + ditherRCoefficient * bayerValue) >= threshold){
     			outputColor = 255;
     		}
     		//set color in pixels
