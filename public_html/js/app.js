@@ -32,12 +32,12 @@ document.getElementById('image-file-input').addEventListener('change', (e)=>{
 	this.value = null;
 }, false);
 
-function canvasLoadImage(canvas, context, image){
-	const imageWidth = image.width;
-	const imageHeight = image.height;
-	canvas.width = imageWidth;
-	canvas.height = imageHeight;
-	context.drawImage(image, 0, 0, imageWidth, imageHeight);
+function canvasLoadImage(canvas, context, image, scale=1){
+	const scaledImageWidth = Math.round(image.width * scale);
+	const scaledImageHeight = Math.round(image.height * scale);
+	canvas.width = scaledImageWidth;
+	canvas.height = scaledImageHeight;
+	context.drawImage(image, 0, 0, scaledImageWidth, scaledImageHeight);
 }
 
 //pixels should be UInt8ClampedArray
@@ -53,37 +53,47 @@ function clearCanvas(context){
 
 
 function loadImage(image, file){
-	const imageWidth = image.width;
-	const imageHeight = image.height;
+	const imageByteSize = image.width * image.height * 4;
+	const memoryPageSize = 64 * 1024;
 	
 	//turn image into arrayBuffer by drawing it and then getting it from canvas
 	clearCanvas(displayCanvasContext);
 	canvasLoadImage(displayCanvas, displayCanvasContext, image);
-	const pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, imageWidth, imageWidth).data.buffer);
+	let scaledImageWidth = displayCanvas.width;
+	let scaledImageHeight = displayCanvas.height;
+	let pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
 	
 	//setting memory from: https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
-	const currentMemorySize = wasmExports.memory.buffer.byteLength;
+	let currentMemorySize = wasmExports.memory.buffer.byteLength;
 	//see if we need to grow memory
 	if(pixels.length > currentMemorySize){
 		//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/grow
 		//grow will add amount * pageSize to total memory
-		const memoryPageSize = 64 * 1024;
 		const growthAmount = Math.ceil((pixels.length - currentMemorySize) / memoryPageSize);
 		wasmExports.memory.grow(growthAmount);
+	}
+	//see if we ran out of memory, so that we need to scale down image
+	currentMemorySize = wasmExports.memory.buffer.byteLength;
+	if(imageByteSize > currentMemorySize){
+		//we need to scale down image to fit buffer
+		const imageScale = 1 - Math.sqrt(currentMemorySize / imageByteSize);
+		clearCanvas(displayCanvasContext);
+		canvasLoadImage(displayCanvas, displayCanvasContext, image, imageScale);
+		scaledImageWidth = displayCanvas.width;
+		scaledImageHeight = displayCanvas.height;
+		pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
 	}
 	//load image into memory
 	const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
 	wasmHeap.set(pixels);
 	//dither image
-	wasmExports.dither(imageWidth, imageHeight);
+	wasmExports.dither(scaledImageWidth, scaledImageHeight);
 	//dithered image is now in the wasmHeap
 	
 	//draw result on canvas
 	//can't use pixels.length, because buffer might be bigger than actual pixels
-	const ditherResultPixels = wasmHeap.subarray(0, imageWidth * imageHeight * 4);
+	const ditherResultPixels = wasmHeap.subarray(0, scaledImageWidth * scaledImageHeight * 4);
 	clearCanvas(displayCanvasContext);
-	drawPixels(displayCanvasContext, imageWidth, imageHeight, ditherResultPixels);
+	drawPixels(displayCanvasContext, scaledImageWidth, scaledImageHeight, ditherResultPixels);
 
 }
-1920000
-2560000
