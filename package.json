@@ -1,0 +1,15 @@
+{
+  "name": "wasm-dither",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "http-server public_html -c-1 -p 3000"
+  },
+  "author": "Allen Garvey",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}
