@@ -95,5 +95,4 @@ function loadImage(image, file){
 	const ditherResultPixels = wasmHeap.subarray(0, scaledImageWidth * scaledImageHeight * 4);
 	clearCanvas(displayCanvasContext);
 	drawPixels(displayCanvasContext, scaledImageWidth, scaledImageHeight, ditherResultPixels);
-
 }
