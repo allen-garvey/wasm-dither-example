@@ -1,6 +1,6 @@
-# wasm-dither-test
+# wasm-dither-example
 
-Initial test of using webassembly with D and ldc2 to dither an image in the browser. [Based off of this tutorial](https://wiki.dlang.org/Generating_WebAssembly_with_LDC)
+Initial example of using WebAssembly with D and ldc2 to dither an image in the browser. [Based off of this tutorial](https://wiki.dlang.org/Generating_WebAssembly_with_LDC)
 
 ## Dependencies for building
 
@@ -10,7 +10,7 @@ Initial test of using webassembly with D and ldc2 to dither an image in the brow
 
 ## Dependencies for running
 
-* Modern web browser that supports webassembly
+* Modern web browser that supports WebAssembly
 
 ## Getting Started
 
@@ -21,4 +21,4 @@ Initial test of using webassembly with D and ldc2 to dither an image in the brow
 
 ## License
 
-wasm-dither-test is released under the MIT License. See license.txt for more details.
+wasm-dither-example is released under the MIT License. See license.txt for more details.
