@@ -40,12 +40,24 @@ function canvasLoadImage(canvas, context, image){
 	context.drawImage(image, 0, 0, imageWidth, imageHeight);
 }
 
+//pixels should be UInt8ClampedArray
+function drawPixels(context, imageWidth, imageHeight, pixels){
+	const imageData = context.createImageData(imageWidth, imageHeight);
+	imageData.data.set(pixels);
+	context.putImageData(imageData, 0, 0);
+}
+
+function clearCanvas(context){
+	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+}
+
 
 function loadImage(image, file){
 	const imageWidth = image.width;
 	const imageHeight = image.height;
 	
 	//turn image into arrayBuffer by drawing it and then getting it from canvas
+	clearCanvas(displayCanvasContext);
 	canvasLoadImage(displayCanvas, displayCanvasContext, image);
 	const pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, imageWidth, imageWidth).data.buffer);
 	
@@ -60,10 +72,18 @@ function loadImage(image, file){
 		wasmExports.memory.grow(growthAmount);
 	}
 	//load image into memory
-	const wasmHeap = new Uint8Array(wasmExports.memory.buffer);
+	const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
 	wasmHeap.set(pixels);
 	//dither image
 	wasmExports.dither(imageWidth, imageHeight);
 	//dithered image is now in the wasmHeap
-	console.log(wasmHeap);
+	
+	//draw result on canvas
+	//can't use pixels.length, because buffer might be bigger than actual pixels
+	const ditherResultPixels = wasmHeap.subarray(0, imageWidth * imageHeight * 4);
+	clearCanvas(displayCanvasContext);
+	drawPixels(displayCanvasContext, imageWidth, imageHeight, ditherResultPixels);
+
 }
+1920000
+2560000
