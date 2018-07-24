@@ -1,3 +1,40 @@
+var App = {};
+App.Timer = (function(){
+    
+    let timeInMilliseconds;
+    if(performance){
+        timeInMilliseconds = ()=> {return performance.now();};
+    }
+    else{
+        timeInMilliseconds = ()=> {return Date.now();};
+    }
+    
+    function timeFunctionBase(functionToTime, done){
+        const start = timeInMilliseconds();
+        functionToTime();
+        const end = timeInMilliseconds();
+        const seconds = (end - start) / 1000;
+        done(seconds);
+    }
+    
+    function timeFunctionMegapixels(name, numPixels, functionToTime){
+        timeFunctionBase(functionToTime, (seconds)=>{
+            console.log(megapixelsMessage(name, numPixels, seconds));
+        });
+    }
+    
+    function megapixelsMessage(name, numPixels, seconds){
+        const megapixels = numPixels / 1000000;
+        const megapixelsPerSecond = megapixels / seconds;
+        return `${name}: ${seconds}s, ${megapixelsPerSecond.toFixed(2)} megapixels/s`;
+    }
+    
+    return {
+        megapixelsPerSecond: timeFunctionMegapixels,
+    };
+})();
+
+
 
 let wasmExports;
 const displayCanvas = document.getElementById('display-canvas');
@@ -87,7 +124,9 @@ function loadImage(image, file){
 	const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
 	wasmHeap.set(pixels);
 	//dither image
-	wasmExports.dither(scaledImageWidth, scaledImageHeight);
+	App.Timer.megapixelsPerSecond('wasm ordered dither', scaledImageWidth * scaledImageHeight, ()=>{
+		wasmExports.dither(scaledImageWidth, scaledImageHeight);
+	});
 	//dithered image is now in the wasmHeap
 	
 	//draw result on canvas
