@@ -1,0 +1,34 @@
+/*
+* Base styles 
+*/
+body{
+    font-family: sans-serif;
+    padding-top: 3em;
+}
+label{
+    font-weight: bold;
+    margin-right: 4px;
+}
+.container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.hint{
+    color: #777;
+}
+
+/* 
+* Loading message 
+*/
+.loading .main{
+    display: none;
+}
+.loading-message{
+    display: none;
+}
+.loading .loading-message{
+    display: initial;
+}
