@@ -18,7 +18,7 @@ Initial example of using WebAssembly with D and ldc2 to dither an image in the b
 ## Getting Started
 
 * Make sure `-L--no-warn-search-mismatch` is removed or commented out in `/etc/ldc2.conf `in the ldc2 binary directory
-* Run `./compile`
+* Run `./build`
 * Run `npm start`
 * Open your browser to [http://localhost:3000](http://localhost:3000)
 
