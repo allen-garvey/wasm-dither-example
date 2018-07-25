@@ -46,6 +46,8 @@ WebAssembly.instantiateStreaming(fetch('js/dither.wasm'), {})
 	.then(wasmResults => {
 		wasmExports = wasmResults.instance.exports;
 		document.documentElement.classList.remove('loading');
+	}).catch((e)=>{
+		console.log(e);
 	});
 
 document.getElementById('image-file-input').addEventListener('change', (e)=>{
