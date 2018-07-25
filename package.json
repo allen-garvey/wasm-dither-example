@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node static_server.js 3000 docs"
+    "start": "http-server docs -c-1 -p 3000"
   },
   "author": "Allen Garvey",
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
 }
