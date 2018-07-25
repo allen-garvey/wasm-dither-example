@@ -74,12 +74,12 @@ void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
     	//ignore transparent pixels
     	if(pixels[pixelOffset+3] > 0){
     		//have to disable array bounds check in compiler for dynamic array index
-    		float bayerValue = bayerMatrix[(y%bayerDimensions) * bayerDimensions + (x%bayerDimensions)];
+    		float bayerValue = bayerMatrix[y%bayerDimensions * bayerDimensions + (x%bayerDimensions)];
     		float currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
     		
     		//dither between black and white
     		ubyte outputColor = 0;
-    		if((currentLightness + bayerValue) >= threshold){
+    		if(currentLightness + bayerValue >= threshold){
     			outputColor = 255;
     		}
     		//set color in pixels
