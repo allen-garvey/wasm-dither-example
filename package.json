@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node static_server.js 3000 public_html"
+    "start": "node static_server.js 3000 docs"
   },
   "author": "Allen Garvey",
   "license": "MIT",
