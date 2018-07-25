@@ -117,5 +117,5 @@ function displayDitherResults(ditherResultPixels){
 }
 
 function displayPerformanceResults(seconds, megapixelsPerSecond){
-	document.getElementById('performance-results').textContent = `Ordered dithering performance: ${seconds}s, ${megapixelsPerSecond.toFixed(2)} megapixels/s`;
+	document.getElementById('performance-results').textContent = `Ordered dithering performance: ${seconds} seconds, ${megapixelsPerSecond.toFixed(2)} megapixels per second`;
 }
