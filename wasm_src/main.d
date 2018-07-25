@@ -35,9 +35,9 @@ float pixelLightness(int r, int g, int b){
 }
 
 void fillBayerMatrix(float* bayerMatrix, float ditherRCoefficient){
-	bayerMatrix[0] = -0.5 * ditherRCoefficient;
+	bayerMatrix[0] = -0.5 		 * ditherRCoefficient;
 	bayerMatrix[1] = 0.166666667 * ditherRCoefficient;
-	bayerMatrix[2] = 0.5 * ditherRCoefficient;
+	bayerMatrix[2] = 0.5 		 * ditherRCoefficient;
 	bayerMatrix[3] = -.166666667 * ditherRCoefficient;
 }
 
