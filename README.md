@@ -5,6 +5,9 @@ Initial example of using WebAssembly with D and ldc2 to dither an image in the b
 ## Dependencies for building
 
 * ldc2 >= 1.11.0 beta2
+
+## Optional dependencies
+
 * npm
 * node >= 6
 
@@ -16,7 +19,7 @@ Initial example of using WebAssembly with D and ldc2 to dither an image in the b
 
 * Make sure `-L--no-warn-search-mismatch` is removed or commented out in `/etc/ldc2.conf `in the ldc2 binary directory
 * Run `./compile`
-* Run `npm install && npm start`
+* Run `npm start`
 * Open your browser to [http://localhost:3000](http://localhost:3000)
 
 ## License
