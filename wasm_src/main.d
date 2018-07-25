@@ -1,6 +1,17 @@
 //main entry point
 extern(C): // disable D mangling
 
+template TInitialize(T){
+    //sort of halfway between static and dynamic array 
+    //like dynamic array in that length and offset can be runtime values
+    //but like static array in that length cannot change after initialization without possible causing problems
+    T[] fixedArray(int offset, int length){
+        //take pointer to (global/heap? not sure correct term) memory and convert to array by taking slice
+        //(make sure you disable bounds checking in compiler since assert is not supported in wasm currently)
+        return (cast(T*) offset)[0..length];
+    }
+}
+
 int max(int v1, int v2, int v3){
 	if(v1 > v2){
 		if(v1 > v3){
@@ -34,7 +45,7 @@ float pixelLightness(int r, int g, int b){
 	return (maxValue + minValue) / 510.0;
 }
 
-void fillBayerMatrix(float* bayerMatrix, float ditherRCoefficient){
+void fillBayerMatrix(float[] bayerMatrix, float ditherRCoefficient){
 	bayerMatrix[0] = -0.5 		 * ditherRCoefficient;
 	bayerMatrix[1] = 0.166666667 * ditherRCoefficient;
 	bayerMatrix[2] = 0.5 		 * ditherRCoefficient;
@@ -42,10 +53,11 @@ void fillBayerMatrix(float* bayerMatrix, float ditherRCoefficient){
 }
 
 void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
-	//pixels array starts at offset 0 in wasm heap
-	ubyte* pixels = cast(ubyte*) 0;
 	//* 4 since RGBA format
 	immutable int pixelsLength = imageWidth * imageHeight * 4;
+    //pixels array starts at offset 0 in wasm heap
+    ubyte[] pixels = TInitialize!(ubyte).fixedArray(0, pixelsLength);
+
 	//based on the value of r from https://en.wikipedia.org/wiki/Ordered_dithering
     //formula is hightestValue / cube_root(numColors)
     //highest value should be 1
@@ -54,14 +66,15 @@ void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
     
     //2x2 bayer matrix
     immutable int bayerDimensions = 2;
-    //create array on heap
-    float* bayerMatrix = cast(float*) heapOffset;
+    
+    //create array using heap memory
+    float[] bayerMatrix = TInitialize!(float).fixedArray(heapOffset, bayerDimensions*bayerDimensions);
 
     /*
     //adjust heapOffset and heapLength, in case we want to use them again
     auto matrixSize = float.sizeof * bayerDimensions * bayerDimensions; 
-    heapOffset += matrixSize;
-    heapLength -= matrixSize;
+    heapOffset += bayerMatrix.sizeof;
+    heapLength -= bayerMatrix.sizeof;
     */
 
     //initialize matrix
