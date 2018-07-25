@@ -1,10 +1,10 @@
 # wasm-dither-example
 
-Initial example of using WebAssembly with D and ldc2 to dither an image in the browser. [Based off of this tutorial](https://wiki.dlang.org/Generating_WebAssembly_with_LDC)
+Initial example of using WebAssembly with D and LDC to dither an image in the browser, [based off this tutorial](https://wiki.dlang.org/Generating_WebAssembly_with_LDC). Demo at [https://allen-garvey.github.io/wasm-dither-example/](https://allen-garvey.github.io/wasm-dither-example/)
 
 ## Dependencies for building
 
-* ldc2 >= 1.11.0 beta2
+* [LDC >= 1.11.0 beta2](https://github.com/ldc-developers/ldc/releases/)
 
 ## Optional dependencies
 
