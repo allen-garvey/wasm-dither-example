@@ -1,58 +1,40 @@
-var App = {};
-App.Timer = (function(){
-    
-    let timeInMilliseconds;
-    if(performance){
-        timeInMilliseconds = ()=> {return performance.now();};
-    }
-    else{
-        timeInMilliseconds = ()=> {return Date.now();};
-    }
-    
-    function timeFunctionBase(functionToTime, done){
-        const start = timeInMilliseconds();
-        functionToTime();
-        const end = timeInMilliseconds();
-        const seconds = (end - start) / 1000;
-        done(seconds);
-    }
-    
-    function timeFunctionMegapixels(name, numPixels, functionToTime){
-		let message;
-        timeFunctionBase(functionToTime, (seconds)=>{
-			message = megapixelsMessage(name, numPixels, seconds);
-            console.log(message);
-		});
-		return message;
-    }
-    
-    function megapixelsMessage(name, numPixels, seconds){
-        const megapixels = numPixels / 1000000;
-        const megapixelsPerSecond = megapixels / seconds;
-        return `${name}: ${seconds}s, ${megapixelsPerSecond.toFixed(2)} megapixels/s`;
-    }
-    
-    return {
-        megapixelsPerSecond: timeFunctionMegapixels,
-    };
-})();
 
+let workerLoadWasmResponseCode = null;
+let workerHasSentPixels = false;
+function ditherWorkerMessageReceived(e){
+	const messageData = e.data;
+	if(workerLoadWasmResponseCode === null){
+		const responseCodeArray = new Int8Array(messageData);
+		workerLoadWasmResponseCode = responseCodeArray[0];
+		//check for success
+		if(workerLoadWasmResponseCode > 0){
+			//success
+			document.documentElement.classList.remove('loading');
+		}
+		else{
+			//failed
+			document.getElementById('status-message').textContent = "Looks like something went wrong, or your browser does not support WebAssembly.";
+		}
+		return;
+	}
+	if(!workerHasSentPixels){
+		//buffer might be bigger than actual pixels
+		const pixels = new Uint8Array(messageData).subarray(0, displayCanvas.width * displayCanvas.height * 4);
+		displayDitherResults(pixels);
+		workerHasSentPixels = true;
+	}
+	else{
+		//display performance results
+		const performanceResults = new Float32Array(messageData);
+		displayPerformanceResults(performanceResults[0], performanceResults[1]);
+		workerHasSentPixels = false;
+	}
+}
 
-
-let wasmExports;
 const displayCanvas = document.getElementById('display-canvas');
 const displayCanvasContext = displayCanvas.getContext('2d');
 const imageElement = document.createElement('img');
 let currentImageObjectUrl;
-
-WebAssembly.instantiateStreaming(fetch('js/dither.wasm'), {})
-	.then(wasmResults => {
-		wasmExports = wasmResults.instance.exports;
-		document.documentElement.classList.remove('loading');
-	}).catch((e)=>{
-		console.log(e);
-		document.getElementById('status-message').textContent = "Looks like something went wrong, or your browser does not support WebAssembly.";
-	});
 
 document.getElementById('image-file-input').addEventListener('change', (e)=>{
 	const files = e.target.files;
@@ -64,7 +46,7 @@ document.getElementById('image-file-input').addEventListener('change', (e)=>{
 		return window.alert(`${file.name} appears to be of type ${file.type} rather than an image`);
 	}
 	imageElement.onload = ()=> {
-		loadImage(imageElement, file);
+		loadImage(imageElement);
 	};
 	if(currentImageObjectUrl){
 		URL.revokeObjectURL(currentImageObjectUrl);
@@ -74,6 +56,19 @@ document.getElementById('image-file-input').addEventListener('change', (e)=>{
 	
 	this.value = null;
 }, false);
+
+//create webworker
+const ditherWorker = new Worker('js/worker.js');
+ditherWorker.onmessage = ditherWorkerMessageReceived;
+//send wasm to worker
+fetch('js/dither.wasm').then((response)=>{
+	return response.arrayBuffer();
+}).then((buffer)=>{
+	ditherWorker.postMessage(buffer);
+}).catch((e)=>{
+	console.log(e);
+	document.getElementById('status-message').textContent = "Could not fetch WebAssembly file";
+});
 
 function canvasLoadImage(canvas, context, image, scale=1){
 	const scaledImageWidth = Math.round(image.width * scale);
@@ -95,7 +90,7 @@ function clearCanvas(context){
 }
 
 
-function loadImage(image, file){
+function loadImage(image){
 	let scaledImageWidth = image.width;
 	let scaledImageHeight = image.height;
 
@@ -111,39 +106,16 @@ function loadImage(image, file){
 	scaledImageHeight = displayCanvas.height;
 	const pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
 
-	const imageByteSize = scaledImageWidth * scaledImageHeight * 4;
-	const memoryPageSize = 64 * 1024;
-	
-	//setting memory from: https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
-	const currentMemorySize = wasmExports.memory.buffer.byteLength;
-	//extra memory in bytes to store up to 16*16 bayer matrix of floats, floats in D are 32 bit
-	const extraMemoryForHeap = 4 * 256;
-	const totalMemoryRequired = pixels.length + extraMemoryForHeap;
-	//see if we need to grow memory
-	if(totalMemoryRequired > currentMemorySize){
-		//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/grow
-		//grow will add amount * pageSize to total memory
-		const growthAmount = Math.ceil((totalMemoryRequired - currentMemorySize) / memoryPageSize);
-		wasmExports.memory.grow(growthAmount);
-	}
-	//load image into memory
-	const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
-	wasmHeap.set(pixels);
-	//figure out how much heap memory there is, and it's offset
-	const heapOffset = imageByteSize;
-	const heapSize = wasmHeap.length - imageByteSize;
-	//dither image
-	const performanceResults = App.Timer.megapixelsPerSecond('Ordered dithering performance', scaledImageWidth * scaledImageHeight, ()=>{
-		wasmExports.dither(scaledImageWidth, scaledImageHeight, heapOffset, heapSize);
-	});
-	//dithered image is now in the wasmHeap
-	
-	//draw result on canvas
-	//can't use pixels.length, because buffer might be bigger than actual pixels
-	const ditherResultPixels = wasmHeap.subarray(0, scaledImageWidth * scaledImageHeight * 4);
-	clearCanvas(displayCanvasContext);
-	drawPixels(displayCanvasContext, scaledImageWidth, scaledImageHeight, ditherResultPixels);
+	const imageHeader = new Uint16Array([scaledImageWidth, scaledImageHeight]);
+	ditherWorker.postMessage(imageHeader.buffer, [imageHeader.buffer]);
+	ditherWorker.postMessage(pixels.buffer, [pixels.buffer]);
+}
 
-	//display performance results
-	document.getElementById('performance-results').textContent = performanceResults;
+function displayDitherResults(ditherResultPixels){
+	clearCanvas(displayCanvasContext);
+	drawPixels(displayCanvasContext, displayCanvas.width, displayCanvas.height, ditherResultPixels);
+}
+
+function displayPerformanceResults(seconds, megapixelsPerSecond){
+	document.getElementById('performance-results').textContent = `Ordered dithering performance: ${seconds}s, ${megapixelsPerSecond.toFixed(2)} megapixels/s`;
 }
