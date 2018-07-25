@@ -2,23 +2,34 @@
 <html class="loading">
     <head>
         <meta charset="utf-8"/>
-        <title>D Webassembly Dither Example</title>
+        <title>D WebAssembly Dither Example</title>
         <meta name="description" content=""/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <link rel="stylesheet" type="text/css" href="styles/style.css"/>
     </head>
     <body>
-        <div class="container">
-            <div class="loading-message">Loading&hellip;</div>
-            <main class="main">
-                <label for="image-file-input">Open image file</label>
-                <input id="image-file-input" type="file"/>
-                <p class="hint">Your photos will remain on your device and will not be uploaded or shared with anyone.</p>
-                <div>
-                    <canvas id="display-canvas"></canvas>
+        <header class="container">
+            <div class="source-link">
+                    <a href="https://github.com/allen-garvey/wasm-dither-example">Source on GitHub</a>
                 </div>
-            </main>
-        </div>
+            <h1>Dithering an image with WebAssembly, D, and ldc</h1>
+        </header>
+        <main class="main">
+            <div class="container">
+                <div class="loading-message"><span id="status-message">Loading&hellip;</span></div>
+                <div class="controls-container">
+                    <div>
+                        <label for="image-file-input">Open image file</label>
+                        <input id="image-file-input" type="file"/>
+                    </div>
+                    <p class="hint">Your photos will remain on your device and will not be uploaded or shared with anyone.</p>
+                    <p id="performance-results"></p>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="display-canvas"></canvas>
+            </div>
+        </main>
 		<script src="/js/app.js"></script>
     </body>
 </html>
