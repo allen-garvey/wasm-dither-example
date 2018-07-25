@@ -72,7 +72,6 @@ void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
 
     /*
     //adjust heapOffset and heapLength, in case we want to use them again
-    auto matrixSize = float.sizeof * bayerDimensions * bayerDimensions; 
     heapOffset += bayerMatrix.sizeof;
     heapLength -= bayerMatrix.sizeof;
     */
