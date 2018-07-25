@@ -85,7 +85,7 @@ function ditherImage(pixels, imageWidth, imageHeight){
 	//load image into memory
 	const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
 	wasmHeap.set(pixels);
-	//figure out how much heap memory there is, and it's offset
+	//figure out how much heap memory there is, and its offset
 	const heapOffset = imageByteSize;
 	const heapSize = wasmHeap.length - imageByteSize;
 	//dither image
