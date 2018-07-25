@@ -85,7 +85,6 @@ void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
     for(int pixelOffset=0,x=0,y=0;pixelOffset<pixelsLength;pixelOffset+=4){
     	//ignore transparent pixels
     	if(pixels[pixelOffset+3] > 0){
-    		//have to disable array bounds check in compiler for dynamic array index
     		float bayerValue = bayerMatrix[y%bayerDimensions * bayerDimensions + (x%bayerDimensions)];
     		float currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
     		
