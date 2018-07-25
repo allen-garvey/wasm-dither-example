@@ -100,34 +100,29 @@ function loadImage(image, file){
 	canvasLoadImage(displayCanvas, displayCanvasContext, image);
 	let scaledImageWidth = displayCanvas.width;
 	let scaledImageHeight = displayCanvas.height;
-	let pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
+	const pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
 	
 	//setting memory from: https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
-	let currentMemorySize = wasmExports.memory.buffer.byteLength;
+	const currentMemorySize = wasmExports.memory.buffer.byteLength;
+	//extra memory in bytes to store up to 16*16 bayer matrix of floats, floats in D are 32 bit
+	const extraMemoryForHeap = 4 * 256;
+	const totalMemoryRequired = pixels.length + extraMemoryForHeap;
 	//see if we need to grow memory
-	if(pixels.length > currentMemorySize){
+	if(totalMemoryRequired > currentMemorySize){
 		//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/grow
 		//grow will add amount * pageSize to total memory
-		const growthAmount = Math.ceil((pixels.length - currentMemorySize) / memoryPageSize);
+		const growthAmount = Math.ceil((totalMemoryRequired - currentMemorySize) / memoryPageSize);
 		wasmExports.memory.grow(growthAmount);
-	}
-	//see if we ran out of memory, so that we need to scale down image
-	currentMemorySize = wasmExports.memory.buffer.byteLength;
-	if(imageByteSize > currentMemorySize){
-		//we need to scale down image to fit buffer
-		const imageScale = 1 - Math.sqrt(currentMemorySize / imageByteSize);
-		clearCanvas(displayCanvasContext);
-		canvasLoadImage(displayCanvas, displayCanvasContext, image, imageScale);
-		scaledImageWidth = displayCanvas.width;
-		scaledImageHeight = displayCanvas.height;
-		pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
 	}
 	//load image into memory
 	const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
 	wasmHeap.set(pixels);
+	//figure out how much heap memory there is, and it's offset
+	const heapOffset = imageByteSize;
+	const heapSize = wasmHeap.length - imageByteSize;
 	//dither image
 	App.Timer.megapixelsPerSecond('wasm ordered dither', scaledImageWidth * scaledImageHeight, ()=>{
-		wasmExports.dither(scaledImageWidth, scaledImageHeight);
+		wasmExports.dither(scaledImageWidth, scaledImageHeight, heapOffset, heapSize);
 	});
 	//dithered image is now in the wasmHeap
 	
