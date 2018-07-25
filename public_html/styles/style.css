@@ -4,6 +4,9 @@
 body{
     font-family: sans-serif;
 }
+h1{
+    margin-top: 0;
+}
 a{
     text-decoration: none;
 }
@@ -25,7 +28,7 @@ canvas{
     margin: 0 auto;
 }
 .source-link{
-    padding: 1em 0 3em;
+    padding: 1em 0 2em;
     text-align: right;
 }
 /*Can't use flex justify-content: center, or canvas might go off left side of page*/
