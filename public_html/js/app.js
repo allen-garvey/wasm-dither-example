@@ -96,15 +96,23 @@ function clearCanvas(context){
 
 
 function loadImage(image, file){
-	const imageByteSize = image.width * image.height * 4;
-	const memoryPageSize = 64 * 1024;
+	let scaledImageWidth = image.width;
+	let scaledImageHeight = image.height;
+
+	//scale image if too large (required for phones)
+	const largestDimension = Math.max(scaledImageWidth, scaledImageHeight);
+	const maxImageDimension = Math.min(window.innerWidth, 1800);
+	const scale = largestDimension > maxImageDimension ? maxImageDimension / largestDimension : 1;
 	
 	//turn image into arrayBuffer by drawing it and then getting it from canvas
 	clearCanvas(displayCanvasContext);
-	canvasLoadImage(displayCanvas, displayCanvasContext, image);
-	let scaledImageWidth = displayCanvas.width;
-	let scaledImageHeight = displayCanvas.height;
+	canvasLoadImage(displayCanvas, displayCanvasContext, image, scale);
+	scaledImageWidth = displayCanvas.width;
+	scaledImageHeight = displayCanvas.height;
 	const pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
+
+	const imageByteSize = scaledImageWidth * scaledImageHeight * 4;
+	const memoryPageSize = 64 * 1024;
 	
 	//setting memory from: https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
 	const currentMemorySize = wasmExports.memory.buffer.byteLength;
