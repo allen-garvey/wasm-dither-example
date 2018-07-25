@@ -4,6 +4,6 @@
         "checkJs": true
     },
     "include": [
-        "public_html/js/**/*"
+        "docs/js/**/*"
     ]
 }
