@@ -19,8 +19,17 @@
                 <div class="loading-message"><span id="status-message">Loading&hellip;</span></div>
                 <div class="controls-container">
                     <div>
-                        <label for="image-file-input">Open image file</label>
+                        <label class="row-label" for="image-file-input">Open image file</label>
                         <input id="image-file-input" type="file"/>
+                    </div>
+                    <div>
+                        <label class="row-label">Method</label>
+                        <label class="radio-label">WebAssembly
+                            <input type="radio" name="dither-method" value="1" checked />
+                        </label>
+                        <label class="radio-label">JS
+                            <input type="radio" name="dither-method" value="2" />
+                        </label>
                     </div>
                     <p class="hint">Your photos will remain on your device and will not be uploaded or shared with anyone.</p>
                     <p id="performance-results"></p>

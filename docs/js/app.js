@@ -62,7 +62,7 @@
 			else{
 				//display performance results
 				const performanceResults = new Float32Array(messageData);
-				displayPerformanceResults(performanceResults[0], performanceResults[1]);
+				displayPerformanceResults(performanceResults[0], performanceResults[1], performanceResults[2]);
 				workerHasSentPixels = false;
 				workerResponseImageHeader = null;
 			}
@@ -122,8 +122,9 @@
 			scaledImageWidth = displayCanvas.width;
 			scaledImageHeight = displayCanvas.height;
 			const pixels = new Uint8Array(displayCanvasContext.getImageData(0, 0, scaledImageWidth, scaledImageHeight).data.buffer);
-		
-			const imageHeader = new Uint32Array([scaledImageWidth, scaledImageHeight]);
+			//value of a radio button from: https://stackoverflow.com/questions/9618504/how-to-get-the-selected-radio-button-s-value
+			const ditherMethod = parseInt(document.querySelector('input[name="dither-method"]:checked').value);
+			const imageHeader = new Uint32Array([scaledImageWidth, scaledImageHeight, ditherMethod]);
 			ditherWorker.postMessage(imageHeader.buffer, [imageHeader.buffer]);
 			ditherWorker.postMessage(pixels.buffer, [pixels.buffer]);
 		}
@@ -133,8 +134,9 @@
 			Canvas.draw(displayCanvasContext, imageWidth, imageHeight, ditherResultPixels);
 		}
 		
-		function displayPerformanceResults(seconds, megapixelsPerSecond){
-			document.getElementById('performance-results').textContent = `Ordered dithering performance: ${seconds} seconds, ${megapixelsPerSecond.toFixed(2)} megapixels per second`;
+		function displayPerformanceResults(seconds, megapixelsPerSecond, ditherId){
+			const ditherMethodName = ditherId === 1 ? 'WASM' : 'JS';
+			document.getElementById('performance-results').textContent = `${ditherMethodName} ordered dithering performance: ${seconds} seconds, ${megapixelsPerSecond.toFixed(2)} megapixels per second`;
 		}
 	})(App.Canvas);
 })();

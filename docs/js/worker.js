@@ -19,11 +19,13 @@
         }
         
         function timeFunctionMegapixels(name, numPixels, functionToTime){
-            let stats;
+            //even though we are returning only 2 values here, we need space for 3 values since we are returning ditherId
+            let stats = new Float32Array(3);
             timeFunctionBase(functionToTime, (seconds)=>{
                 const results = megapixelsMessage(name, numPixels, seconds);
                 console.log(results.message);
-                stats = new Float32Array([results.seconds, results.megapixelsPerSecond]);
+                stats[0] = results.seconds;
+                stats[1] = results.megapixelsPerSecond;
             });
             return stats;
         }
@@ -45,7 +47,77 @@
         };
     })();
 
-    (function(Timer){
+    App.JsOrderedDither = (function(Timer){
+        //returns lightness in range 0-1
+        function pixelLightness(r, g, b){
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            //255*2 = 510
+            return (max + min) / 510;
+        }
+        function calculateDitherRCoefficient(numColors){
+            const highestValue = 1;
+            return highestValue / Math.cbrt(numColors);
+        }
+        function getBayerMatrix(){
+            const ditherRCoefficient = calculateDitherRCoefficient(2);
+            return new Float32Array([
+                -0.5 		 * ditherRCoefficient,
+                0.166666667  * ditherRCoefficient,
+                0.5 		 * ditherRCoefficient,
+                -.166666667  * ditherRCoefficient,
+            ]);
+        }
+        function ditherImage(pixels, imageWidth, imageHeight){
+            const pixelsLength = pixels.length;
+            const bayerDimensions = 2;
+            const bayerMatrix = getBayerMatrix();
+            const threshold = 0.5;
+            
+            for(let pixelOffset=0,x=0,y=0;pixelOffset<pixelsLength;pixelOffset+=4){
+                //ignore transparent pixels
+                if(pixels[pixelOffset+3] > 0){
+                    const bayerValue = bayerMatrix[y%bayerDimensions * bayerDimensions + (x%bayerDimensions)];
+                    const currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
+                    
+                    //dither between black and white
+                    let outputColor = 0;
+                    if(currentLightness + bayerValue >= threshold){
+                        outputColor = 255;
+                    }
+                    //set color in pixels
+                    for(let i=0;i<3;i++){
+                        pixels[pixelOffset+i] = outputColor;
+                    }
+                }
+                x++;
+                if(x >= imageWidth){
+                    x = 0;
+                    y++;
+                }
+            }
+        }
+
+        function ditherWrapper(pixels, imageWidth, imageHeight, ditherId){
+            const performanceResults = Timer.megapixelsPerSecond('JS  Ordered dithering performance', imageWidth*imageHeight, ()=>{
+                ditherImage(pixels, imageWidth, imageHeight);
+            });
+            performanceResults[2] = ditherId;
+
+            //can't use pixels.length, because buffer might be bigger than actual pixels
+            const imageResponseHeader = new Uint32Array([imageWidth, imageHeight]);
+        
+            postMessage(imageResponseHeader.buffer, [imageResponseHeader.buffer])
+            postMessage(pixels.buffer, [pixels.buffer]);
+            postMessage(performanceResults, [performanceResults.buffer]);
+        }
+
+        return {
+            dither: ditherWrapper,
+        };
+    })(App.Timer);
+
+    (function(Timer, JsOrderedDither){
         let wasmExports = null;
         let imageHeader = null;
         
@@ -66,7 +138,7 @@
         }
         
         
-        function ditherImage(pixels, imageWidth, imageHeight){
+        function wasmDitherImage(pixels, imageWidth, imageHeight, ditherId){
             const imageByteSize = imageWidth * imageHeight * 4;
             const memoryPageSize = 64 * 1024;
             
@@ -89,12 +161,12 @@
             const heapOffset = imageByteSize;
             const heapSize = wasmHeap.length - imageByteSize;
             //dither image
-            const performanceResults = Timer.megapixelsPerSecond('Ordered dithering performance', imageWidth * imageHeight, ()=>{
+            const performanceResults = Timer.megapixelsPerSecond('WASM ordered dithering performance', imageWidth * imageHeight, ()=>{
                 wasmExports.dither(imageWidth, imageHeight, heapOffset, heapSize);
             });
+            performanceResults[2] = ditherId;
             //dithered image is now in the wasmHeap
             
-            //draw result on canvas
             //can't use pixels.length, because buffer might be bigger than actual pixels
             const ditherResultPixels = wasmHeap.subarray(0, imageWidth * imageHeight * 4);
             const imageResponseHeader = new Uint32Array([imageWidth, imageHeight]);
@@ -118,8 +190,14 @@
             }
             //message data must be pixels then
             const pixels = new Uint8Array(messageData);
-            ditherImage(pixels, imageHeader[0], imageHeader[1]);
+            const ditherId = imageHeader[2];
+            if(ditherId === 1){
+                wasmDitherImage(pixels, imageHeader[0], imageHeader[1], ditherId);
+            }
+            else{
+                JsOrderedDither.dither(pixels, imageHeader[0], imageHeader[1], ditherId);
+            }
             imageHeader = null;
         };
-    })(App.Timer);
+    })(App.Timer, App.JsOrderedDither);
 })();
