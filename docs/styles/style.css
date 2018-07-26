@@ -18,6 +18,16 @@ label{
     font-weight: bold;
     margin-right: 4px;
 }
+.radio-label{
+    font-weight: normal;
+}
+.row-label{
+    display: inline-block;
+    min-width: 9em;
+}
+input[type="radio"]{
+    margin-right: 1em;
+}
 canvas{
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-crisp-edges;
@@ -38,6 +48,9 @@ canvas{
 }
 .hint{
     color: #777;
+}
+.controls-container > div{
+    margin-top: 1em;
 }
 
 /* 
