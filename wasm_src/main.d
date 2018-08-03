@@ -18,7 +18,7 @@ template TInitialize(T){
     //sort of halfway between static and dynamic array 
     //like dynamic array in that length and offset can be runtime values
     //but like static array in that length cannot change after initialization without possible causing problems
-    T[] fixedArray(int offset, int length){
+    T[] fixedArray(void* offset, int length){
         //take pointer to (global/heap? not sure correct term) memory and convert to array by taking slice
         //(make sure you disable bounds checking in compiler since assert is not supported in wasm currently)
         return (cast(T*) offset)[0..length];
@@ -65,20 +65,20 @@ void fillBayerMatrix(float[] bayerMatrix){
 	bayerMatrix[3] = -.166666667 * DITHER_R_COEFFICIENT;
 }
 
-void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
+void dither(void* pixelsData, int imageWidth, int imageHeight, void* heapStart, int heapLength){
 	//* 4 since RGBA format
 	immutable int pixelsLength = imageWidth * imageHeight * 4;
     //pixels array starts at offset 0 in wasm heap
-    ubyte[] pixels = TInitialize!(ubyte).fixedArray(0, pixelsLength);
+    ubyte[] pixels = TInitialize!(ubyte).fixedArray(pixelsData, pixelsLength);
     
     //2x2 bayer matrix
     immutable int bayerDimensions = 2;
     //create array using heap memory
-    float[] bayerMatrix = TInitialize!(float).fixedArray(heapOffset, bayerDimensions*bayerDimensions);
+    float[] bayerMatrix = TInitialize!(float).fixedArray(heapStart, bayerDimensions*bayerDimensions);
 
     /*
-    //adjust heapOffset and heapLength, in case we want to use them again
-    heapOffset += bayerMatrix.sizeof;
+    //adjust heapStart and heapLength, in case we want to use them again
+    heapStart += bayerMatrix.sizeof;
     heapLength -= bayerMatrix.sizeof;
     */
 

@@ -162,7 +162,7 @@
             const heapSize = wasmHeap.length - imageByteSize;
             //dither image
             const performanceResults = Timer.megapixelsPerSecond('WASM ordered dithering performance', imageWidth * imageHeight, ()=>{
-                wasmExports.dither(imageWidth, imageHeight, heapOffset, heapSize);
+                wasmExports.dither(0, imageWidth, imageHeight, heapOffset, heapSize);
             });
             performanceResults[2] = ditherId;
             //dithered image is now in the wasmHeap
