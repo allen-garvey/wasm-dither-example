@@ -5,9 +5,7 @@ extern(C): // disable D mangling
 //formula is hightestValue / cube_root(numColors)
 //highest value should be 1
 //r = 1 / cube_root(2) because we are using 2 colors
-mixin template DitherRCoefficient(){
-    immutable float ditherRCoefficient = 0.7937005259840997;
-}
+enum float DITHER_R_COEFFICIENT = 0.7937005259840997;
 
 template TInitialize(T){
     //sort of halfway between static and dynamic array 
@@ -54,11 +52,10 @@ float pixelLightness(int r, int g, int b){
 }
 
 void fillBayerMatrix(float[] bayerMatrix){
-    mixin DitherRCoefficient;
-	bayerMatrix[0] = -0.5 		 * ditherRCoefficient;
-	bayerMatrix[1] = 0.166666667 * ditherRCoefficient;
-	bayerMatrix[2] = 0.5 		 * ditherRCoefficient;
-	bayerMatrix[3] = -.166666667 * ditherRCoefficient;
+	bayerMatrix[0] = -0.5 		 * DITHER_R_COEFFICIENT;
+	bayerMatrix[1] = 0.166666667 * DITHER_R_COEFFICIENT;
+	bayerMatrix[2] = 0.5 		 * DITHER_R_COEFFICIENT;
+	bayerMatrix[3] = -.166666667 * DITHER_R_COEFFICIENT;
 }
 
 void dither(int imageWidth, int imageHeight, int heapOffset, int heapLength){
