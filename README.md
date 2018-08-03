@@ -6,10 +6,11 @@ Initial example of using WebAssembly with D and LDC to dither an image in the br
 
 * [LDC >= 1.11.0 beta2](https://github.com/ldc-developers/ldc/releases/)
 
-## Optional dependencies
+## Optional dependencies (for serving files for local development)
 
-* npm
-* node >= 6
+* npm and node >= 6
+* python 2
+* python 3
 
 ## Dependencies for running
 
@@ -19,8 +20,25 @@ Initial example of using WebAssembly with D and LDC to dither an image in the br
 
 * Make sure `-L--no-warn-search-mismatch` is removed or commented out in `/etc/ldc2.conf `in the ldc2 binary directory
 * Run `./build`
-* If you have the optional dependencies, run `npm install`, `npm start` and open your browser to [http://localhost:3000](http://localhost:3000)
-* If you do not have npm and node installed, you will need a local web server to serve files from the `docs` directory
+* If you have any of the optional dependencies, follow the instructions in the relevant section. Otherwise, you will need a local web server setup to serve files from the `docs` directory in this repository.
+
+### Serving files using npm and node
+
+* Run `npm install`
+* Run `npm start`
+* Open your browser to [http://localhost:3000](http://localhost:3000)
+
+### Serving files with python 2
+
+* `cd` into the `docs` directory in this repository
+* Run `python -m SimpleHTTPServer 3000`
+* Open your browser to [http://localhost:3000](http://localhost:3000)
+
+### Serving files with python 3
+
+* `cd` into the `docs` directory in this repository
+* Run `python3 -m http.server 3000`
+* Open your browser to [http://localhost:3000](http://localhost:3000)
 
 ## License
 
