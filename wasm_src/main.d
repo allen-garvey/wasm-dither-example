@@ -92,7 +92,7 @@ void dither(void* pixelsData, int imageWidth, int imageHeight, void* heapStart, 
     for(int pixelOffset=0,x=0,y=0;pixelOffset<pixelsLength;pixelOffset+=4){
     	//ignore transparent pixels
     	if(pixels[pixelOffset+3] > 0){
-    		immutable float bayerValue = bayerMatrix[bayerRowOffset * bayerDimensions + (x%bayerDimensions)];
+    		immutable float bayerValue = bayerMatrix[bayerRowOffset + (x%bayerDimensions)];
     		immutable float currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
     		
     		//dither between black and white
@@ -107,7 +107,7 @@ void dither(void* pixelsData, int imageWidth, int imageHeight, void* heapStart, 
     	if(x >= imageWidth){
     		x = 0;
     		y++;
-			bayerRowOffset = y%bayerDimensions;
+			bayerRowOffset = y%bayerDimensions * bayerDimensions;
     	}
     }
 }
