@@ -1,6 +1,13 @@
 //main entry point
 extern(C): // disable D mangling
 
+// stub of assert required for array bounds checks,
+// disable array bounds check compiler option is passed this is not needed
+// version WebAssembly does not seem to work for now
+// version(WebAssembly){
+	void __assert(const(char)* msg, const(char)* file, uint line) {}
+// }
+
 //based on the value of r from https://en.wikipedia.org/wiki/Ordered_dithering
 //formula is hightestValue / cube_root(numColors)
 //highest value should be 1
