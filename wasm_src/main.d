@@ -96,10 +96,8 @@ void dither(void* pixelsData, int imageWidth, int imageHeight, void* heapStart, 
     		immutable float currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
     		
     		//dither between black and white
-    		ubyte outputColor = 0;
-    		if(currentLightness + bayerValue >= threshold){
-    			outputColor = 255;
-    		}
+    		ubyte outputColor = currentLightness + bayerValue >= threshold ? 255 : 0;
+
     		//set color in pixels
     		for(int i=0;i<3;i++){
     			pixels[pixelOffset+i] = outputColor;
