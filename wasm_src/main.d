@@ -29,12 +29,6 @@ float pixelLightness(ubyte r, ubyte g, ubyte b)
     return (maxValue + minValue) / 510.0f;
 }
 
-enum float[2][2] bayerMatrix =
-[
-    [ -0.5f * DITHER_R_COEFFICIENT,  0.166666667f * DITHER_R_COEFFICIENT ],
-    [  0.5f * DITHER_R_COEFFICIENT, -0.166666667f * DITHER_R_COEFFICIENT ],
-];
-
 void dither(ubyte* pixelsData, int imageWidth, int imageHeight)
 {
     //* 4 since RGBA format
@@ -43,6 +37,12 @@ void dither(ubyte* pixelsData, int imageWidth, int imageHeight)
 
     //lightness threshold where we switch between black and white
     enum threshold = 0.5f;
+
+    static immutable float[2][2] bayerMatrix =
+    [
+        [ -0.5f * DITHER_R_COEFFICIENT,  0.166666667f * DITHER_R_COEFFICIENT ],
+        [  0.5f * DITHER_R_COEFFICIENT, -0.166666667f * DITHER_R_COEFFICIENT ],
+    ];
 
     size_t i = 0;
     foreach (y; 0 .. imageHeight)
