@@ -1,116 +1,73 @@
 //main entry point
 extern(C): // disable D mangling
 
-// stub of assert required for array bounds checks,
-// disable array bounds check compiler option is passed this is not needed
-// version WebAssembly does not seem to work for now
-// version(WebAssembly){
-	void __assert(const(char)* msg, const(char)* file, uint line) {}
-// }
-
 //based on the value of r from https://en.wikipedia.org/wiki/Ordered_dithering
 //formula is hightestValue / cube_root(numColors)
 //highest value should be 1
 //r = 1 / cube_root(2) because we are using 2 colors
 enum float DITHER_R_COEFFICIENT = 0.7937005259840997;
 
-template TInitialize(T){
-    //sort of halfway between static and dynamic array 
-    //like dynamic array in that length and offset can be runtime values
-    //but like static array in that length cannot change after initialization without possible causing problems
-    T[] fixedArray(void* offset, int length){
-        //take pointer to (global/heap? not sure correct term) memory and convert to array by taking slice
-        //(make sure you disable bounds checking in compiler since assert is not supported in wasm currently)
-        return (cast(T*) offset)[0..length];
-    }
+ubyte max(ubyte v1, ubyte v2, ubyte v3)
+{
+    if (v1 > v2)
+        return v1 > v3 ? v1 : v3;
+    return v2 > v3 ? v2 : v3;
 }
 
-int max(int v1, int v2, int v3){
-	if(v1 > v2){
-		if(v1 > v3){
-			return v1;
-		}
-		return v3;
-	}
-	else if(v2 > v3){
-		return v2;
-	}
-	return v3;
+ubyte min(ubyte v1, ubyte v2, ubyte v3)
+{
+    if (v1 < v2)
+        return v1 < v3 ? v1 : v3;
+    return v2 < v3 ? v2 : v3;
 }
 
-int min(int v1, int v2, int v3){
-	if(v1 < v2){
-		if(v1 < v3){
-			return v1;
-		}
-		return v3;
-	}
-	else if(v2 < v3){
-		return v2;
-	}
-	return v3;
+float pixelLightness(ubyte r, ubyte g, ubyte b)
+{
+    const maxValue = max(r, g, b);
+    const minValue = min(r, g, b);
+    //510 = 255 * 2 to convert to 0-1 range
+    return (maxValue + minValue) / 510.0f;
 }
 
-float pixelLightness(int r, int g, int b){
-	immutable int maxValue = max(r, g, b);
-	immutable int minValue = min(r, g, b);
-	//510 = 255 * 2 to convert to 0-1 range
-	return (maxValue + minValue) / 510.0;
-}
+void dither(ubyte* pixelsData, int imageWidth, int imageHeight)
+{
+    //* 4 since RGBA format
+    const pixelsLength = (cast(size_t) imageWidth) * imageHeight * 4;
+    ubyte[] pixels = pixelsData[0 .. pixelsLength];
 
-void fillBayerMatrix(float[] bayerMatrix){
-	bayerMatrix[0] = -0.5 		 * DITHER_R_COEFFICIENT;
-	bayerMatrix[1] = 0.166666667 * DITHER_R_COEFFICIENT;
-	bayerMatrix[2] = 0.5 		 * DITHER_R_COEFFICIENT;
-	bayerMatrix[3] = -.166666667 * DITHER_R_COEFFICIENT;
-}
-
-void dither(void* pixelsData, int imageWidth, int imageHeight, void* heapStart, int heapLength){
-	//* 4 since RGBA format
-	immutable int pixelsLength = imageWidth * imageHeight * 4;
-    //pixels array starts at offset 0 in wasm heap
-    ubyte[] pixels = TInitialize!(ubyte).fixedArray(pixelsData, pixelsLength);
-    
-    //2x2 bayer matrix
-    immutable int bayerDimensions = 2;
-    //create array using heap memory
-    float[] bayerMatrix = TInitialize!(float).fixedArray(heapStart, bayerDimensions*bayerDimensions);
-
-    /*
-    //adjust heapStart and heapLength, in case we want to use them again
-    heapStart += bayerMatrix.sizeof;
-    heapLength -= bayerMatrix.sizeof;
-    */
-
-    //initialize matrix
-    fillBayerMatrix(bayerMatrix);
-    
     //lightness threshold where we switch between black and white
-    immutable float threshold = 0.5;
-	//only computing the row offset when y changes adds roughly 20% performance boost
-	int bayerRowOffset = 0;
-    for(int pixelOffset=0,x=0,y=0;pixelOffset<pixelsLength;pixelOffset+=4){
-    	//ignore transparent pixels
-    	if(pixels[pixelOffset+3] > 0){
-    		immutable float bayerValue = bayerMatrix[bayerRowOffset + (x%bayerDimensions)];
-    		immutable float currentLightness = pixelLightness(pixels[pixelOffset], pixels[pixelOffset+1], pixels[pixelOffset+2]);
-    		
-    		//dither between black and white
-    		ubyte outputColor = currentLightness + bayerValue >= threshold ? 255 : 0;
+    enum threshold = 0.5f;
 
-    		//set color in pixels
-    		for(int i=0;i<3;i++){
-    			pixels[pixelOffset+i] = outputColor;
-    		}
-    	}
-    	x++;
-    	if(x >= imageWidth){
-    		x = 0;
-    		y++;
-			bayerRowOffset = y%bayerDimensions * bayerDimensions;
-    	}
+    static immutable float[2][2] bayerMatrix =
+    [
+        [ -0.5f * DITHER_R_COEFFICIENT,  0.166666667f * DITHER_R_COEFFICIENT ],
+        [  0.5f * DITHER_R_COEFFICIENT, -0.166666667f * DITHER_R_COEFFICIENT ],
+    ];
+
+    size_t i = 0;
+    foreach (y; 0 .. imageHeight)
+    {
+        const bayerRow = bayerMatrix[y % bayerMatrix.length];
+        foreach (x; 0 .. imageWidth)
+        {
+            //ignore transparent pixels
+            if (pixels[i+3] > 0)
+            {
+                const bayerValue = bayerRow[x % bayerRow.length];
+                const currentLightness = pixelLightness(pixels[i], pixels[i+1], pixels[i+2]);
+
+                //dither between black and white
+                const outputColor = currentLightness + bayerValue >= threshold ? 255 : 0;
+
+                //set color in pixels
+                pixels[i .. i+3] = outputColor;
+            }
+            i += 4;
+        }
     }
 }
+
+void __assert(const(char)* msg, const(char)* file, uint line) {}
 
 // seems to be the required entry point
 void _start() {}
