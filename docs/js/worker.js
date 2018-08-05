@@ -127,8 +127,8 @@
             WebAssembly.instantiate(wasmArrayBuffer, {})
             .then(wasmResults => {
                 wasmExports = wasmResults.instance.exports;
+                //need to save byte size of program globals so we don't overwrite them with the heap
                 heapStart = wasmExports.memory.buffer.byteLength;
-                console.log('heapStart: ' + heapStart);
                 postMessage(resultCode.buffer, [resultCode.buffer]);
             }).catch((e)=>{
                 console.log(e);
@@ -139,7 +139,6 @@
         
         
         function wasmDitherImage(pixels, imageWidth, imageHeight, ditherId){
-            const imageByteSize = imageWidth * imageHeight * 4;
             const memoryPageSize = 64 * 1024;
             
             //setting memory from: https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
