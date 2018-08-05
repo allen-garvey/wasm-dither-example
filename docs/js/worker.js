@@ -119,6 +119,7 @@
 
     (function(Timer, JsOrderedDither){
         let wasmExports = null;
+        let heapStart = 0;
         let imageHeader = null;
         
         //from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiate
@@ -129,6 +130,8 @@
             WebAssembly.instantiate(wasmArrayBuffer, {})
             .then(wasmResults => {
                 wasmExports = wasmResults.instance.exports;
+                heapStart = wasmExports.memory.buffer.byteLength;
+                console.log('heapStart: ' + heapStart);
                 postMessage(resultCode.buffer, [resultCode.buffer]);
             }).catch((e)=>{
                 console.log(e);
@@ -144,9 +147,7 @@
             
             //setting memory from: https://stackoverflow.com/questions/46748572/how-to-access-webassembly-linear-memory-from-c-c
             const currentMemorySize = wasmExports.memory.buffer.byteLength;
-            //extra memory in bytes to store up to 16*16 bayer matrix of floats, floats in D are 32 bit
-            const extraMemoryForHeap = 4 * 256;
-            const totalMemoryRequired = pixels.length + extraMemoryForHeap;
+            const totalMemoryRequired = heapStart + pixels.length;
             //see if we need to grow memory
             if(totalMemoryRequired > currentMemorySize){
                 //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/grow
@@ -155,14 +156,11 @@
                 wasmExports.memory.grow(growthAmount);
             }
             //load image into memory
-            const wasmHeap = new Uint8ClampedArray(wasmExports.memory.buffer);
+            const wasmHeap = new Uint8Array(wasmExports.memory.buffer, heapStart);
             wasmHeap.set(pixels);
-            //figure out how much heap memory there is, and its offset
-            const heapOffset = imageByteSize;
-            const heapSize = wasmHeap.length - imageByteSize;
             //dither image
             const performanceResults = Timer.megapixelsPerSecond('WASM ordered dithering performance', imageWidth * imageHeight, ()=>{
-                wasmExports.dither(0, imageWidth, imageHeight, heapOffset, heapSize);
+                wasmExports.dither(heapStart, imageWidth, imageHeight);
             });
             performanceResults[2] = ditherId;
             //dithered image is now in the wasmHeap
@@ -173,7 +171,7 @@
         
             postMessage(imageResponseHeader.buffer, [imageResponseHeader.buffer])
             //can't transfer ditherResultPixels buffer, since it is also wasm heap
-            postMessage(ditherResultPixels.buffer);
+            postMessage(ditherResultPixels);
             postMessage(performanceResults, [performanceResults.buffer]);
         }
         
