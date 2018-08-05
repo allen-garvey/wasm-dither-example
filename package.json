@@ -7,6 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "http-server docs -c-1 -p 3000"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/allen-garvey/wasm-dither-example.git"
+  },
   "author": "Allen Garvey",
   "license": "MIT",
   "devDependencies": {
