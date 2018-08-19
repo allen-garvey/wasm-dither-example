@@ -69,11 +69,6 @@ void dither(ubyte* pixelsData, int imageWidth, int imageHeight)
 /*
 * Conditionally include assert stub so compiles for webassembly but will still work on other platforms
 */
-//beta 2
-version(WebAssembly32){
-    void __assert(const(char)* msg, const(char)* file, uint line) {}
-}
-//
 version(WebAssembly){
     void __assert(const(char)* msg, const(char)* file, uint line) {}
 }

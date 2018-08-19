@@ -8,7 +8,7 @@ Example of using WebAssembly with D and LDC to dither an image in the browser, a
 
 ## Dependencies for building
 
-* [LDC >= 1.11.0 beta2](https://github.com/ldc-developers/ldc/releases/)
+* [LDC >= 1.11.0](https://github.com/ldc-developers/ldc/releases/tag/v1.11.0)
 
 ## Optional dependencies (for serving files for local development)
 
