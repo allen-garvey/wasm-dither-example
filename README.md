@@ -18,7 +18,6 @@ Example of using WebAssembly with D and LDC to dither an image in the browser, a
 
 ## Getting Started
 
-* Make sure `-L--no-warn-search-mismatch` is removed or commented out in `/etc/ldc2.conf `in the ldc2 binary directory
 * Run `./build`
 * If you have any of the optional dependencies, follow the instructions in the relevant section. Otherwise, you will need a local web server setup to serve files from the `docs` directory in this repository.
 
