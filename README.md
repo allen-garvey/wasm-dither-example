@@ -9,6 +9,7 @@ Example of using WebAssembly with D and LDC to dither an image in the browser, a
 ## Dependencies for building
 
 * [LDC >= 1.11.0](https://github.com/ldc-developers/ldc/releases/tag/v1.11.0)
+* make
 
 ## Optional dependencies (for serving files for local development)
 
@@ -18,7 +19,7 @@ Example of using WebAssembly with D and LDC to dither an image in the browser, a
 
 ## Getting Started
 
-* Run `./build`
+* Run `make`
 * If you have any of the optional dependencies, follow the instructions in the relevant section. Otherwise, you will need a local web server setup to serve files from the `docs` directory in this repository.
 
 ### Serving files using npm and node
