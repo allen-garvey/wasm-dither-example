@@ -13,7 +13,7 @@ Example of using WebAssembly with D and LDC to dither an image in the browser, a
 
 ## Optional dependencies (for serving files for local development)
 
-* npm and node >= 6
+* npm and node >= 10
 * python 2
 * python 3
 
