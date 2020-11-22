@@ -7,3 +7,6 @@ all: $(WASM_OUTPUT)
 
 $(WASM_OUTPUT): $(D_SRC)
 	ldc2 -mtriple=wasm32-unknown-unknown-wasm -betterC -O $(D_SRC) -of=$(WASM_OUTPUT) -od=$(D_SRC_DIR)
+
+clean:
+	rm $(WASM_OUTPUT)
