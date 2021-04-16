@@ -14,10 +14,9 @@
         
         function timeFunctionMegapixels(name, numPixels, functionToTime){
             //even though we are returning only 2 values here, we need space for 3 values since we are returning ditherId
-            let stats = new Float32Array(3);
+            const stats = new Float32Array(3);
             timeFunctionBase(functionToTime, (seconds)=>{
                 const results = megapixelsMessage(name, numPixels, seconds);
-                console.log(results.message);
                 stats[0] = results.seconds;
                 stats[1] = results.megapixelsPerSecond;
             });
