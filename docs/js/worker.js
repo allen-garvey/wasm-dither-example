@@ -162,7 +162,7 @@
             //dithered image is now in the wasmHeap
             
             //can't use pixels.length, because buffer might be bigger than actual pixels
-            const ditherResultPixels = wasmHeap.subarray(0, imageWidth * imageHeight * 4);
+            const ditherResultPixels = wasmHeap.slice(0, imageWidth * imageHeight * 4);
             const imageResponseHeader = new Uint32Array([imageWidth, imageHeight]);
         
             postMessage(imageResponseHeader.buffer, [imageResponseHeader.buffer])
