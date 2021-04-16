@@ -2,13 +2,7 @@
     var App = {};
     App.Timer = (function(){
         
-        let timeInMilliseconds;
-        if(performance){
-            timeInMilliseconds = ()=> {return performance.now();};
-        }
-        else{
-            timeInMilliseconds = ()=> {return Date.now();};
-        }
+        const timeInMilliseconds = () => performance.now();
         
         function timeFunctionBase(functionToTime, done){
             const start = timeInMilliseconds();
